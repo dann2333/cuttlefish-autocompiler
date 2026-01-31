@@ -27,6 +27,10 @@ jobs:
           sudo apt-get install -y git devscripts equivs config-package-dev debhelper-compat golang curl zip
       - name: Clone android-cuttlefish
         run: git clone https://github.com/google/android-cuttlefish
+      - name: Install bazel (amd64)
+        if: matrix.arch == 'amd64'
+        working-directory: android-cuttlefish
+        run: sudo tools/buildutils/installbazel.sh
       - name: Build packages
         working-directory: android-cuttlefish
         run: tools/buildutils/build_packages.sh
