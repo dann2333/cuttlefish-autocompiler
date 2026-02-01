@@ -37,6 +37,8 @@ jobs:
           name: Build packages
           command: |
             cd android-cuttlefish
+            git config --global --unset url."ssh://git@github.com/".insteadOf || true
+            echo "build --action_env=CARGO_NET_GIT_FETCH_WITH_CLI=true" >> ~/.bazelrc
             DEBIAN_FRONTEND=noninteractive CARGO_NET_GIT_FETCH_WITH_CLI=true tools/buildutils/build_packages.sh
       - run:
           name: Package debs
