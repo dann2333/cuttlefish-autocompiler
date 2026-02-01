@@ -16,3 +16,4 @@ creating a GitHub Release with timestamped tags. Configure the `GH_TOKEN` enviro
 CircleCI with a GitHub token that has permission to create releases. The CircleCI workflow runs on
 each commit to `main` and on the scheduled `0 3 * * *` (Daily at 03:00 UTC) cron for the `main`
 branch.
+
