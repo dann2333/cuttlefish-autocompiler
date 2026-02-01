@@ -1,7 +1,9 @@
-name: Build Cuttlefish Packages
+name: Build Cuttlefish Packages (amd64)
 
 on:
   workflow_dispatch:
+  schedule:
+    - cron: "0 3 * * *"
 
 permissions:
   contents: read
@@ -62,7 +64,7 @@ jobs:
           merge-multiple: true
       - name: Prepare release tag
         id: release_tag
-        run: echo "tag=cuttlefish-$(date -u +%Y%m%d%H%M%S)" >> "$GITHUB_OUTPUT"
+        run: echo "tag=cuttlefish-$(date -u +%Y%m%d%H%M%S)-amd64" >> "$GITHUB_OUTPUT"
       - name: Publish release
         uses: softprops/action-gh-release@v2
         with:

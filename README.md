@@ -5,11 +5,12 @@
 This repository uses GitHub Actions and CircleCI workflows to build the latest
 `android-cuttlefish` packages. The `amd64` packages build directly on GitHub's standard runners.
 The `arm64` packages build on `amd64` runners using QEMU emulation to avoid the need for arm64
-runner capacity. Each build publishes a release with one zip per architecture. Each zip contains
-the `.deb` packages produced by `tools/buildutils/build_packages.sh`.
+runner capacity. Each workflow publishes a release with a tag suffix for the architecture and one
+zip per build. Each zip contains the `.deb` packages produced by
+`tools/buildutils/build_packages.sh`.
 
-To run the workflows manually, use **Actions → Build Cuttlefish Packages → Run workflow** for
-amd64 and **Actions → Build Cuttlefish Packages (arm64 emulated) → Run workflow** for arm64.
+To run the workflows manually, use **Actions → Build Cuttlefish Packages (amd64) → Run workflow**
+for amd64 and **Actions → Build Cuttlefish Packages (arm64 emulated) → Run workflow** for arm64.
 
 ## CircleCI
 

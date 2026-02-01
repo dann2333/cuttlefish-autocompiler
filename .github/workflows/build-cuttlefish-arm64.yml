@@ -15,39 +15,36 @@ jobs:
     env:
       CARGO_NET_GIT_FETCH_WITH_CLI: "true"
     steps:
-      - name: Configure git for HTTPS
-        run: |
-          git config --global url."https://github.com/".insteadOf "ssh://git@github.com/"
-          git config --global url."https://github.com/".insteadOf "git@github.com:"
-      - name: Install dependencies
+      - name: Install QEMU
         run: |
           sudo DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a apt-get update
-          sudo DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a apt-get -y full-upgrade
-          sudo DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a apt-get install -y git devscripts equivs config-package-dev debhelper-compat golang curl zip qemu-user-static binfmt-support
-      - name: Enable arm64 execution
-        run: |
+          sudo DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a apt-get install -y qemu-user-static binfmt-support
           sudo update-binfmts --enable qemu-aarch64
-          sudo update-binfmts --display qemu-aarch64
-      - name: Clone android-cuttlefish
-        run: git clone https://github.com/google/android-cuttlefish
-      - name: Install bazel (arm64 via emulation)
-        working-directory: android-cuttlefish
+      - name: Build packages (arm64 via docker)
         run: |
-          sudo qemu-aarch64-static /bin/bash tools/buildutils/installbazel.sh
-          sudo update-binfmts --disable qemu-aarch64 || true
-      - name: Build packages (arm64 via emulation)
-        working-directory: android-cuttlefish
-        run: sudo qemu-aarch64-static /bin/bash tools/buildutils/build_packages.sh
-      - name: Package debs
-        working-directory: android-cuttlefish
-        run: |
-          mkdir -p ../dist
-          mapfile -d '' debs < <(find . -name '*.deb' -type f -print0)
-          if [ ${#debs[@]} -eq 0 ]; then
-            echo "No .deb packages found." >&2
-            exit 1
-          fi
-          zip -j ../dist/cuttlefish-arm64.zip "${debs[@]}"
+          mkdir -p dist
+          docker run --rm --platform linux/arm64 \
+            -e CARGO_NET_GIT_FETCH_WITH_CLI=true \
+            -v "${{ github.workspace }}:/work" \
+            -w /work \
+            ubuntu:22.04 \
+            bash -c '
+              set -euo pipefail
+              git config --global url."https://github.com/".insteadOf "ssh://git@github.com/"
+              git config --global url."https://github.com/".insteadOf "git@github.com:"
+              apt-get update
+              DEBIAN_FRONTEND=noninteractive apt-get -y upgrade
+              DEBIAN_FRONTEND=noninteractive apt-get install -y sudo git devscripts equivs config-package-dev debhelper-compat golang curl zip
+              git clone https://github.com/google/android-cuttlefish
+              cd android-cuttlefish
+              tools/buildutils/build_packages.sh
+              mapfile -d "" debs < <(find . -name "*.deb" -type f -print0)
+              if [ ${#debs[@]} -eq 0 ]; then
+                echo "No .deb packages found." >&2
+                exit 1
+              fi
+              zip -j /work/dist/cuttlefish-arm64.zip "${debs[@]}"
+            '
       - name: Upload packages
         uses: actions/upload-artifact@v4
         with:
