@@ -1,4 +1,4 @@
-name: Build Cuttlefish Packages
+name: Build Cuttlefish Packages (amd64)
 
 on:
   workflow_dispatch:
@@ -10,18 +10,10 @@ permissions:
 
 jobs:
   build:
-    name: Build (${{ matrix.arch }})
-    runs-on: ${{ matrix.runs_on }}
+    name: Build (amd64)
+    runs-on: ubuntu-latest
     env:
       CARGO_NET_GIT_FETCH_WITH_CLI: "true"
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - arch: amd64
-            runs_on: ubuntu-latest
-          - arch: arm64
-            runs_on: ubuntu-latest-arm64
     steps:
       - name: Configure git for HTTPS
         run: |
@@ -35,7 +27,6 @@ jobs:
       - name: Clone android-cuttlefish
         run: git clone https://github.com/google/android-cuttlefish
       - name: Install bazel (amd64)
-        if: matrix.arch == 'amd64'
         working-directory: android-cuttlefish
         run: sudo tools/buildutils/installbazel.sh
       - name: Build packages
@@ -50,12 +41,12 @@ jobs:
             echo "No .deb packages found." >&2
             exit 1
           fi
-          zip -j ../dist/cuttlefish-${{ matrix.arch }}.zip "${debs[@]}"
+          zip -j ../dist/cuttlefish-amd64.zip "${debs[@]}"
       - name: Upload packages
         uses: actions/upload-artifact@v4
         with:
-          name: cuttlefish-${{ matrix.arch }}
-          path: dist/cuttlefish-${{ matrix.arch }}.zip
+          name: cuttlefish-amd64
+          path: dist/cuttlefish-amd64.zip
           if-no-files-found: error
 
   release:
@@ -69,11 +60,11 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           path: dist
-          pattern: cuttlefish-*
+          pattern: cuttlefish-amd64
           merge-multiple: true
       - name: Prepare release tag
         id: release_tag
-        run: echo "tag=cuttlefish-$(date -u +%Y%m%d%H%M%S)" >> "$GITHUB_OUTPUT"
+        run: echo "tag=cuttlefish-$(date -u +%Y%m%d%H%M%S)-amd64" >> "$GITHUB_OUTPUT"
       - name: Publish release
         uses: softprops/action-gh-release@v2
         with:
