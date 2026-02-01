@@ -8,11 +8,18 @@ jobs:
         enum: ["amd64", "arm64"]
       resource_class:
         type: string
+    environment:
+      CARGO_NET_GIT_FETCH_WITH_CLI: "true"
     machine:
       image: ubuntu-2204:current
       resource_class: << parameters.resource_class >>
     steps:
       - checkout
+      - run:
+          name: Configure git for HTTPS
+          command: |
+            git config --global url."https://github.com/".insteadOf "ssh://git@github.com/"
+            git config --global url."https://github.com/".insteadOf "git@github.com:"
       - run:
           name: Install dependencies
           command: |
