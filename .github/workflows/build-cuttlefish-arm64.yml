@@ -1,14 +1,16 @@
-name: Build Cuttlefish Packages
+name: Build Cuttlefish Packages (arm64 emulated)
 
 on:
   workflow_dispatch:
+  schedule:
+    - cron: "0 3 * * *"
 
 permissions:
   contents: read
 
 jobs:
   build:
-    name: Build (amd64)
+    name: Build (arm64 on amd64)
     runs-on: ubuntu-latest
     env:
       CARGO_NET_GIT_FETCH_WITH_CLI: "true"
@@ -21,15 +23,21 @@ jobs:
         run: |
           sudo DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a apt-get update
           sudo DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a apt-get -y full-upgrade
-          sudo DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a apt-get install -y git devscripts equivs config-package-dev debhelper-compat golang curl zip
+          sudo DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a apt-get install -y git devscripts equivs config-package-dev debhelper-compat golang curl zip qemu-user-static binfmt-support
+      - name: Enable arm64 execution
+        run: |
+          sudo update-binfmts --enable qemu-aarch64
+          sudo update-binfmts --display qemu-aarch64
       - name: Clone android-cuttlefish
         run: git clone https://github.com/google/android-cuttlefish
-      - name: Install bazel (amd64)
+      - name: Install bazel (arm64 via emulation)
         working-directory: android-cuttlefish
-        run: sudo tools/buildutils/installbazel.sh
-      - name: Build packages
+        run: |
+          sudo qemu-aarch64-static /bin/bash tools/buildutils/installbazel.sh
+          sudo update-binfmts --disable qemu-aarch64 || true
+      - name: Build packages (arm64 via emulation)
         working-directory: android-cuttlefish
-        run: tools/buildutils/build_packages.sh
+        run: sudo qemu-aarch64-static /bin/bash tools/buildutils/build_packages.sh
       - name: Package debs
         working-directory: android-cuttlefish
         run: |
@@ -39,12 +47,12 @@ jobs:
             echo "No .deb packages found." >&2
             exit 1
           fi
-          zip -j ../dist/cuttlefish-amd64.zip "${debs[@]}"
+          zip -j ../dist/cuttlefish-arm64.zip "${debs[@]}"
       - name: Upload packages
         uses: actions/upload-artifact@v4
         with:
-          name: cuttlefish-amd64
-          path: dist/cuttlefish-amd64.zip
+          name: cuttlefish-arm64
+          path: dist/cuttlefish-arm64.zip
           if-no-files-found: error
 
   release:
@@ -58,11 +66,11 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           path: dist
-          pattern: cuttlefish-amd64
+          pattern: cuttlefish-arm64
           merge-multiple: true
       - name: Prepare release tag
         id: release_tag
-        run: echo "tag=cuttlefish-$(date -u +%Y%m%d%H%M%S)" >> "$GITHUB_OUTPUT"
+        run: echo "tag=cuttlefish-$(date -u +%Y%m%d%H%M%S)-arm64" >> "$GITHUB_OUTPUT"
       - name: Publish release
         uses: softprops/action-gh-release@v2
         with:
