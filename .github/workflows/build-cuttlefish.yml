@@ -23,8 +23,9 @@ jobs:
     steps:
       - name: Install dependencies
         run: |
-          sudo apt-get update
-          sudo apt-get install -y git devscripts equivs config-package-dev debhelper-compat golang curl zip
+          sudo DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a apt-get update
+          sudo DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a apt-get -y full-upgrade
+          sudo DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a apt-get install -y git devscripts equivs config-package-dev debhelper-compat golang curl zip
       - name: Clone android-cuttlefish
         run: git clone https://github.com/google/android-cuttlefish
       - name: Install bazel (amd64)
