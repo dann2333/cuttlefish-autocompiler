@@ -17,7 +17,8 @@ jobs:
           name: Install dependencies
           command: |
             sudo apt-get update
-            sudo apt-get install -y git devscripts equivs config-package-dev debhelper-compat golang curl zip
+            sudo DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a apt-get -y full-upgrade
+            sudo DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a apt-get install -y git devscripts equivs config-package-dev debhelper-compat golang curl zip
       - run:
           name: Clone android-cuttlefish
           command: git clone https://github.com/google/android-cuttlefish
