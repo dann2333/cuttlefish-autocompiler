@@ -30,7 +30,7 @@ jobs:
                 name: Install bazel (amd64)
                 command: |
                   cd android-cuttlefish
-                  sudo tools/buildutils/installbazel.sh
+                  sudo DEBIAN_FRONTEND=noninteractive tools/buildutils/installbazel.sh
       - run:
           name: Build packages
           command: |
