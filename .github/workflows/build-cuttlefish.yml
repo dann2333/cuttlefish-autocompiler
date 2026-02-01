@@ -1,9 +1,10 @@
 name: Build Cuttlefish Packages (amd64)
 
+# NOTE: This workflow is deprecated. Please use build-cuttlefish-unified.yml instead.
+# This workflow is kept for backward compatibility but will be removed in the future.
+
 on:
   workflow_dispatch:
-  schedule:
-    - cron: "0 3 * * *"
 
 permissions:
   contents: read
