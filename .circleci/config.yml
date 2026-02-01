@@ -62,8 +62,8 @@ jobs:
       - run:
           name: Install gh CLI
           command: |
-            sudo apt-get update
-            sudo apt-get install -y gh
+            sudo DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a apt-get update
+            sudo DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a apt-get install -y gh
       - run:
           name: Publish release
           command: |
