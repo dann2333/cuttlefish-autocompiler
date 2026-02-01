@@ -35,7 +35,7 @@ jobs:
           name: Build packages
           command: |
             cd android-cuttlefish
-            tools/buildutils/build_packages.sh
+            DEBIAN_FRONTEND=noninteractive tools/buildutils/build_packages.sh
       - run:
           name: Package debs
           command: |
