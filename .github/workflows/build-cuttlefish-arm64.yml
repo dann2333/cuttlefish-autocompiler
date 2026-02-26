@@ -16,6 +16,11 @@ jobs:
     env:
       CARGO_NET_GIT_FETCH_WITH_CLI: "true"
     steps:
+      - name: Set Swap Space
+        uses: pierotofy/set-swap-space@master
+        with:
+          swap-size-gb: 15
+          swappiness: 60
       - name: Install QEMU
         run: |
           sudo DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a apt-get update
@@ -60,6 +65,11 @@ jobs:
     permissions:
       contents: write
     steps:
+      - name: Set Swap Space
+        uses: pierotofy/set-swap-space@master
+        with:
+          swap-size-gb: 15
+          swappiness: 60
       - name: Download artifacts
         uses: actions/download-artifact@v4
         with:
