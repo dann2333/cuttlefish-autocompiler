@@ -56,7 +56,7 @@ jobs:
 
   build-arm64:
     name: Build (arm64)
-    runs-on: ubuntu-24.04-arm
+    runs-on: ubuntu-22.04-arm
     env:
       CARGO_NET_GIT_FETCH_WITH_CLI: "true"
     steps:
