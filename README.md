@@ -4,9 +4,9 @@
 
 This repository uses GitHub Actions and CircleCI workflows to build the latest
 `android-cuttlefish` packages. Both `amd64` and `arm64` packages are built in parallel
-on GitHub's standard amd64 runners. The `arm64` packages use QEMU emulation to avoid
-the need for arm64 runner capacity. The unified workflow publishes a single release
-containing both architecture packages.
+using GitHub-hosted runners (`ubuntu-latest` for `amd64` and `ubuntu-24.04-arm` for
+`arm64`). The unified workflow publishes a single release containing both architecture
+packages.
 
 To run the workflow manually, use **Actions → Build Cuttlefish Packages (amd64 + arm64) → Run workflow**.
 Legacy architecture-specific workflows are deprecated but available for backward compatibility.
