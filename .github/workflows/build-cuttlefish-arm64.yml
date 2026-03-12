@@ -19,8 +19,7 @@ jobs:
       - name: Set Swap Space
         uses: pierotofy/set-swap-space@master
         with:
-          swap-size-gb: 15
-          swappiness: 60
+          swap-size-gb: 24
       - name: Install QEMU
         run: |
           sudo DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a apt-get update
