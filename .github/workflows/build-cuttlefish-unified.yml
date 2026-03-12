@@ -18,8 +18,7 @@ jobs:
       - name: Set Swap Space
         uses: pierotofy/set-swap-space@master
         with:
-          swap-size-gb: 15
-          swappiness: 60
+          swap-size-gb: 24
       - name: Configure git for HTTPS
         run: |
           git config --global url."https://github.com/".insteadOf "ssh://git@github.com/"
