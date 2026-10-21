@@ -9,20 +9,30 @@ permissions:
   contents: read
 
 jobs:
-  build-amd64:
-    name: Build (amd64)
-    runs-on: ubuntu-latest
+  build:
+    name: Build (${{ matrix.arch }})
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      # Keep building the other architecture when one of them fails.
+      fail-fast: false
+      matrix:
+        include:
+          - arch: amd64
+            runner: ubuntu-latest
+          - arch: arm64
+            runner: ubuntu-24.04-arm
     env:
       CARGO_NET_GIT_FETCH_WITH_CLI: "true"
     steps:
+      # Pinned to the commit of the master branch; the action has no usable release tags.
       - name: Set Swap Space
-        uses: pierotofy/set-swap-space@master
+        uses: pierotofy/set-swap-space@fc79b3f67fa8a838184ce84a674ca12238d2c761
         with:
           swap-size-gb: 24
       - name: Configure git for HTTPS
         run: |
-          git config --global url."https://github.com/".insteadOf "ssh://git@github.com/"
-          git config --global url."https://github.com/".insteadOf "git@github.com:"
+          git config --global --add url."https://github.com/".insteadOf "ssh://git@github.com/"
+          git config --global --add url."https://github.com/".insteadOf "git@github.com:"
       - name: Install dependencies
         run: |
           sudo DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a apt-get update
@@ -30,7 +40,10 @@ jobs:
           sudo DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a apt-get install -y git devscripts equivs config-package-dev debhelper-compat golang curl zip
       - name: Clone android-cuttlefish
         run: git clone https://github.com/google/android-cuttlefish
-      - name: Install bazel (amd64)
+      # build_packages.sh only installs bazelisk when `bazel` is missing from PATH, but the
+      # runner images ship their own `bazel` while cuttlefish-common-build-deps depends on the
+      # `bazelisk` apt package. Install it explicitly on every architecture.
+      - name: Install bazelisk
         working-directory: android-cuttlefish
         run: sudo tools/buildutils/installbazel.sh
       - name: Build packages
@@ -45,67 +58,21 @@ jobs:
             echo "No .deb packages found." >&2
             exit 1
           fi
-          zip -j ../dist/cuttlefish-amd64.zip "${debs[@]}"
+          zip -j ../dist/cuttlefish-${{ matrix.arch }}.zip "${debs[@]}"
       - name: Upload packages
         uses: actions/upload-artifact@v4
         with:
-          name: cuttlefish-amd64
-          path: dist/cuttlefish-amd64.zip
-          if-no-files-found: error
-
-  build-arm64:
-    name: Build (arm64)
-    runs-on: ubuntu-24.04-arm
-    env:
-      CARGO_NET_GIT_FETCH_WITH_CLI: "true"
-    steps:
-      - name: Set Swap Space
-        uses: pierotofy/set-swap-space@master
-        with:
-          swap-size-gb: 24
-      - name: Configure git for HTTPS
-        run: |
-          git config --global url."https://github.com/".insteadOf "ssh://git@github.com/"
-          git config --global url."https://github.com/".insteadOf "git@github.com:"
-      - name: Install dependencies
-        run: |
-          sudo DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a apt-get update
-          sudo DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a apt-get -y full-upgrade
-          sudo DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a apt-get install -y git devscripts equivs config-package-dev debhelper-compat golang curl zip
-      - name: Clone android-cuttlefish
-        run: git clone https://github.com/google/android-cuttlefish
-      - name: Build packages
-        working-directory: android-cuttlefish
-        run: tools/buildutils/build_packages.sh
-      - name: Package debs
-        working-directory: android-cuttlefish
-        run: |
-          mkdir -p ../dist
-          mapfile -d '' debs < <(find . -name '*.deb' -type f -print0)
-          if [ ${#debs[@]} -eq 0 ]; then
-            echo "No .deb packages found." >&2
-            exit 1
-          fi
-          zip -j ../dist/cuttlefish-arm64.zip "${debs[@]}"
-      - name: Upload packages
-        uses: actions/upload-artifact@v4
-        with:
-          name: cuttlefish-arm64
-          path: dist/cuttlefish-arm64.zip
+          name: cuttlefish-${{ matrix.arch }}
+          path: dist/cuttlefish-${{ matrix.arch }}.zip
           if-no-files-found: error
 
   release:
     name: Release
-    needs: [build-amd64, build-arm64]
+    needs: build
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
-      - name: Set Swap Space
-        uses: pierotofy/set-swap-space@master
-        with:
-          swap-size-gb: 15
-          swappiness: 60
       - name: Download artifacts
         uses: actions/download-artifact@v4
         with:
@@ -122,7 +89,7 @@ jobs:
           name: Cuttlefish build ${{ steps.release_tag.outputs.tag }}
           body: |
             Automated build of Cuttlefish packages for amd64 and arm64 architectures.
-            
+
             - `cuttlefish-amd64.zip` - Packages for amd64 architecture
             - `cuttlefish-arm64.zip` - Packages for arm64 architecture
           files: |
