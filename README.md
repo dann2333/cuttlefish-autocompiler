@@ -19,8 +19,3 @@ The workflow runs daily at `0 3 * * *` (03:00 UTC). To run it manually, use
   `bazel` binary is already on `PATH`, which is the case on the runner images, yet
   `cuttlefish-common-build-deps` depends on the `bazelisk` apt package.
 - Builds need a lot of memory, so a 24 GB swap file is created before every build.
-
-### Legacy workflows
-
-`build-cuttlefish.yml` (amd64) and `build-cuttlefish-arm64.yml` (arm64 emulated with QEMU) are
-deprecated, manual-only and kept for backward compatibility. Use the unified workflow instead.
